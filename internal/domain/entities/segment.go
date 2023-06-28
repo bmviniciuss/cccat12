@@ -9,6 +9,8 @@ var (
 	ErrInvalidSegmentDistance = errors.New("invalid segment distance")
 )
 
+var TimeLayout = "2006-01-02T15:04:05"
+
 type Segment struct {
 	Distance float64
 	Date     time.Time

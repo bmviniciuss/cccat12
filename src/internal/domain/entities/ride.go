@@ -14,10 +14,10 @@ type Ride struct {
 	Segments []Segment
 }
 
-func NewRide(segments []Segment) (*Ride, error) {
+func NewRide() *Ride {
 	return &Ride{
 		Segments: []Segment{},
-	}, nil
+	}
 }
 
 func (r *Ride) AddSegment(distance float64, date time.Time) error {

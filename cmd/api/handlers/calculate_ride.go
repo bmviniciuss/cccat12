@@ -29,7 +29,7 @@ func CalculateRideHandler(c *fiber.Ctx) error {
 		time, err := time.Parse(entities.TimeLayout, segment.Date)
 		if err != nil {
 			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-				"message": err.Error(),
+				"message": "Invalid Date",
 			})
 		}
 		err = ride.AddSegment(segment.Distance, time)

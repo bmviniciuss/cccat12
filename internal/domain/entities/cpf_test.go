@@ -1,0 +1,70 @@
+package entities
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestNewCPF(t *testing.T) {
+	type args struct {
+		cpf string
+	}
+	validCPF := CPF("47397571093")
+	tests := []struct {
+		name    string
+		args    args
+		out     *CPF
+		wantErr bool
+		errOut  error
+	}{
+		{
+			name: "should return an error when cpf is less than 11 characters",
+			args: args{
+				cpf: "123.123.123-1",
+			},
+			out:     nil,
+			wantErr: true,
+			errOut:  ErrCPFInvalid,
+		},
+		{
+			name: "should return an InvalidCPF error when cpf is invalid when d1 is invalid",
+			args: args{
+				cpf: "473.975.710-83",
+			},
+			out:     nil,
+			wantErr: true,
+			errOut:  ErrCPFInvalid,
+		},
+		{
+			name: "should return an InvalidCPF error when cpf is invalid when d2 is invalid",
+			args: args{
+				cpf: "473.975.710-91",
+			},
+			out:     nil,
+			wantErr: true,
+			errOut:  ErrCPFInvalid,
+		},
+		{
+			name: "should cpf on valid string",
+			args: args{
+				cpf: "473.975.710-93",
+			},
+			out:     &validCPF,
+			wantErr: true,
+			errOut:  ErrCPFInvalid,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := NewCPF(tt.args.cpf)
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, tt.errOut, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.out, got)
+			}
+		})
+	}
+}

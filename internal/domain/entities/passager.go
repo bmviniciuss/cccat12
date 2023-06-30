@@ -3,7 +3,7 @@ package entities
 import "github.com/google/uuid"
 
 type Passager struct {
-	ID       string
+	ID       uuid.UUID
 	Name     string
 	Email    string
 	Document CPF
@@ -16,7 +16,7 @@ func CreatePassager(name, email, document string) (*Passager, error) {
 	}
 
 	p := &Passager{
-		ID:       uuid.New().String(),
+		ID:       NewULID(),
 		Name:     name,
 		Email:    email,
 		Document: *cpf,

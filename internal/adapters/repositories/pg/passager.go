@@ -22,6 +22,22 @@ var (
 	_ repository.Passager = (*PassagerRepository)(nil)
 )
 
-func (r *PassagerRepository) Create(ctx context.Context, p *entities.Passager) error {
+var insertPassagerQuery = `
+INSERT INTO cccar.passagers
+	(id, "name", email, "document", created_at, updated_at)
+VALUES($1, $2, $3, $4, now(), now());
+`
+
+func (r *PassagerRepository) Create(ctx context.Context, p *entities.Passager) (err error) {
+	stmt, err := r.db.PrepareContext(ctx, insertPassagerQuery)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.ExecContext(ctx, p.ID, p.Name, p.Email, p.Document)
+	if err != nil {
+		return err // TODO: What to do with constraints errors?
+	}
+
 	return nil
 }

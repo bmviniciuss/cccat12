@@ -89,11 +89,8 @@ func calculateDigit(substr string, multiplierStart int) (int, error) {
 			return -1, nil
 		}
 		sum += digit * (multiplierStart - i)
-		fmt.Printf("%d * %d = %d\n", digit, multiplierStart-i, digit*(multiplierStart-i))
 	}
-	fmt.Printf("sum: %d\n", sum)
 	rest := sum % 11
-	fmt.Printf("rest: %d\n", rest)
 	if rest < 2 {
 		return 0, nil
 	}

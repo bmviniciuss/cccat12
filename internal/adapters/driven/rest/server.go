@@ -7,12 +7,12 @@ import (
 
 type Server struct {
 	RideCalculatorHandler *handlers.RideCalculatorHandler
-	PassagerHandler       *handlers.PassagerHandler
+	PassagerHandler       handlers.PassagerHandlerPort
 }
 
 func NewServer(
 	rideCalculatorHandler *handlers.RideCalculatorHandler,
-	passagerHandler *handlers.PassagerHandler,
+	passagerHandler handlers.PassagerHandlerPort,
 ) *Server {
 	return &Server{
 		RideCalculatorHandler: rideCalculatorHandler,

@@ -6,6 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type PassagerHandlerPort interface {
+	Create(c *fiber.Ctx) error
+}
+
 type PassagerHandler struct {
 	createPassager *usecase.CreatePassager
 }
@@ -15,6 +19,10 @@ func NewPassagerHandler(createPassager *usecase.CreatePassager) *PassagerHandler
 		createPassager: createPassager,
 	}
 }
+
+var (
+	_ PassagerHandlerPort = (*PassagerHandler)(nil)
+)
 
 func (h *PassagerHandler) Create(c *fiber.Ctx) error {
 	input := new(presentation.CreatePassagerInput)

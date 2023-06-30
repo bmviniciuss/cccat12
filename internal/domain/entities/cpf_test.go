@@ -19,13 +19,31 @@ func TestNewCPF(t *testing.T) {
 		errOut  error
 	}{
 		{
-			name: "should return an error when cpf is less than 11 characters",
+			name: "should return an ErrCPFInvalidLength when cpf has less than 11 characters",
 			args: args{
 				cpf: "123.123.123-1",
 			},
 			out:     nil,
 			wantErr: true,
-			errOut:  ErrCPFInvalid,
+			errOut:  ErrCPFInvalidLength,
+		},
+		{
+			name: "should return an ErrCPFInvalidLength when cpf has more than 11 characters",
+			args: args{
+				cpf: "123.123.123-122",
+			},
+			out:     nil,
+			wantErr: true,
+			errOut:  ErrCPFInvalidLength,
+		},
+		{
+			name: "should return an ErrCPFNonDigit if cpf have non digit characters",
+			args: args{
+				cpf: "123.1fds.123-122",
+			},
+			out:     nil,
+			wantErr: true,
+			errOut:  ErrCPFNonDigit,
 		},
 		{
 			name: "should return an InvalidCPF error when cpf is invalid when d1 is invalid",

@@ -14,40 +14,49 @@ func (c CPF) String() string {
 }
 
 var (
-	ErrCPFInvalid = errors.New("CPF is invalid")
+	ErrCPFInvalid       = errors.New("CPF is invalid")
+	ErrCPFInvalidLength = fmt.Errorf("CPF must have 11 characters")
+	ErrCPFNonDigit      = errors.New("CPF contains non digit characters")
 )
 
 func NewCPF(cpf string) (*CPF, error) {
-	cleanCPF := cleanDigits(cpf)
-	c := CPF(cleanCPF)
-
-	err := c.Validate()
+	cleanCPF := removeSeparators(cpf)
+	if !isNumericString(cleanCPF) {
+		return nil, ErrCPFNonDigit
+	}
+	model := CPF(cleanCPF)
+	err := model.Validate()
 	if err != nil {
 		return nil, err
 	}
-	return &c, nil
+	return &model, nil
 }
 
-func cleanDigits(cpf string) string {
+func removeSeparators(cpf string) string {
 	str := strings.ReplaceAll(cpf, ".", "")
 	str = strings.ReplaceAll(str, "-", "")
 	str = strings.ReplaceAll(str, " ", "")
 	return str
 }
 
+func isNumericString(str string) bool {
+	_, err := strconv.Atoi(str)
+	return err == nil
+}
+
 func (cpf CPF) Validate() error {
 	if len(cpf) != 11 {
-		return ErrCPFInvalid
+		return ErrCPFInvalidLength
 	}
 
 	err := cpf.validateDigit(9, string(cpf.String()[9]), 10)
 	if err != nil {
-		return err
+		return ErrCPFInvalid
 	}
 
 	err = cpf.validateDigit(10, string(cpf.String()[10]), 11)
 	if err != nil {
-		return err
+		return ErrCPFInvalid
 	}
 
 	return nil

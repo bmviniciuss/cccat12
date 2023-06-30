@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: cccar_user
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: cccar
+    ports:
+      - 5432:5432
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./ddl:/docker-entrypoint-initdb.d
+
+volumes:
+  db_data:

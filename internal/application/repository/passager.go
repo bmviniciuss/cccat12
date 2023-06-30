@@ -7,5 +7,5 @@ import (
 )
 
 type Passager interface {
-	Create(ctx context.Context, p entities.Passager) error
+	Create(ctx context.Context, p *entities.Passager) error
 }

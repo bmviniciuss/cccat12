@@ -3,21 +3,19 @@ package handlers
 import (
 	"time"
 
+	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
 	"github.com/bmviniciuss/cccat12/internal/domain/entities"
 	"github.com/gofiber/fiber/v2"
 )
 
-type CalculateRideInput struct {
-	Segments []Segment `json:"segments"`
+type RideCalculatorHandler struct{}
+
+func NewRideCalculatorHandler() *RideCalculatorHandler {
+	return &RideCalculatorHandler{}
 }
 
-type Segment struct {
-	Distance float64 `json:"distance"`
-	Date     string  `json:"date"`
-}
-
-func CalculateRideHandler(c *fiber.Ctx) error {
-	input := new(CalculateRideInput)
+func (h *RideCalculatorHandler) Handle(c *fiber.Ctx) error {
+	input := new(presentation.CalculateRideInput)
 	if err := c.BodyParser(input); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": err.Error(),
@@ -41,8 +39,7 @@ func CalculateRideHandler(c *fiber.Ctx) error {
 	}
 
 	price := ride.Calculate()
-	return c.JSON(fiber.Map{
-		"price": price,
+	return c.JSON(presentation.CalculateRideOutput{
+		Price: price,
 	})
-
 }

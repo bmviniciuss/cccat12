@@ -23,7 +23,7 @@ func (c *CreatePassager) Execute(ctx context.Context, input CreatePassagerInput)
 		return nil, err
 	}
 
-	err = c.passagerRepository.Create(ctx, *passager)
+	err = c.passagerRepository.Create(ctx, passager)
 	if err != nil {
 		return nil, err
 	}

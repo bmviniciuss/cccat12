@@ -46,13 +46,13 @@ func TestNewCPF(t *testing.T) {
 			errOut:  ErrCPFInvalid,
 		},
 		{
-			name: "should cpf on valid string",
+			name: "should return a CPF on valid string",
 			args: args{
-				cpf: "473.975.710-93",
+				cpf: validCPF.String(),
 			},
 			out:     &validCPF,
-			wantErr: true,
-			errOut:  ErrCPFInvalid,
+			wantErr: false,
+			errOut:  nil,
 		},
 	}
 	for _, tt := range tests {

@@ -29,7 +29,7 @@ func (c *CreatePassager) Execute(ctx context.Context, input CreatePassagerInput)
 	}
 
 	return &CreatePassagerOutput{
-		ID: passager.ID,
+		ID: passager.ID.String(),
 	}, nil
 }
 

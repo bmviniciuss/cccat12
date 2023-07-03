@@ -1,14 +1,15 @@
 package handlers
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
 	"github.com/bmviniciuss/cccat12/internal/application/usecase"
-	"github.com/gofiber/fiber/v2"
+	"github.com/bmviniciuss/cccat12/internal/customcontext"
+	"github.com/bmviniciuss/cccat12/internal/ports"
+	"github.com/go-chi/render"
 )
-
-type DriverHandlerPort interface {
-	Create(c *fiber.Ctx) error
-}
 
 type DriverHandler struct {
 	createDriver *usecase.CreateDriver
@@ -21,31 +22,30 @@ func NewDriverHandler(createDriver *usecase.CreateDriver) *DriverHandler {
 }
 
 var (
-	_ DriverHandlerPort = (*DriverHandler)(nil)
+	_ ports.DriverHandlersPort = (*DriverHandler)(nil)
 )
 
-func (h *DriverHandler) Create(c *fiber.Ctx) error {
-	input := new(presentation.CreateDriverInput)
-	if err := c.BodyParser(input); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	reqID, _ := customcontext.RequestID(ctx)
+	var input presentation.CreateDriverInput
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		render.Render(w, r, presentation.ErrBadRequest(reqID, err))
+		return
 	}
-
-	res, err := h.createDriver.Execute(c.Context(), usecase.CreateDriverInput{
+	// TODO: validation
+	res, err := h.createDriver.Execute(ctx, usecase.CreateDriverInput{
 		Name:        input.Name,
 		Document:    input.Document,
 		PlateNumber: input.PlateNumber,
 	})
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
 	}
-
-	out := presentation.CreateDriverOutput{
+	out := &presentation.CreateDriverOutput{
 		ID: res.ID,
 	}
-
-	return c.JSON(out)
+	render.Status(r, http.StatusCreated)
+	render.Render(w, r, out)
 }

@@ -1,5 +1,7 @@
 package presentation
 
+import "net/http"
+
 type CalculateRideInput struct {
 	Segments []Segment `json:"segments"`
 }
@@ -11,4 +13,8 @@ type Segment struct {
 
 type CalculateRideOutput struct {
 	Price float64 `json:"price"`
+}
+
+func (o *CalculateRideOutput) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }

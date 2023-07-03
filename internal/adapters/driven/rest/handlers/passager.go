@@ -1,14 +1,15 @@
 package handlers
 
 import (
+	"encoding/json"
+	"net/http"
+
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
 	"github.com/bmviniciuss/cccat12/internal/application/usecase"
-	"github.com/gofiber/fiber/v2"
+	"github.com/bmviniciuss/cccat12/internal/customcontext"
+	"github.com/bmviniciuss/cccat12/internal/ports"
+	"github.com/go-chi/render"
 )
-
-type PassagerHandlerPort interface {
-	Create(c *fiber.Ctx) error
-}
 
 type PassagerHandler struct {
 	createPassager *usecase.CreatePassager
@@ -21,31 +22,33 @@ func NewPassagerHandler(createPassager *usecase.CreatePassager) *PassagerHandler
 }
 
 var (
-	_ PassagerHandlerPort = (*PassagerHandler)(nil)
+	_ ports.PassagerHandlersPort = (*PassagerHandler)(nil)
 )
 
-func (h *PassagerHandler) Create(c *fiber.Ctx) error {
-	input := new(presentation.CreatePassagerInput)
-	if err := c.BodyParser(input); err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+func (h *PassagerHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	reqID, _ := customcontext.RequestID(ctx)
+
+	var input presentation.CreatePassagerInput
+	err := json.NewDecoder(r.Body).Decode(&input)
+	if err != nil {
+		render.Render(w, r, presentation.ErrBadRequest(reqID, err))
+		return
 	}
 
-	out, err := h.createPassager.Execute(c.Context(), usecase.CreatePassagerInput{
+	out, err := h.createPassager.Execute(ctx, usecase.CreatePassagerInput{
 		Name:     input.Name,
 		Email:    input.Email,
 		Document: input.Document,
 	})
 
 	if err != nil {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
-			"message": err.Error(),
-		})
+		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
 	}
 
-	res := presentation.CreatePassagerOutput{
+	res := &presentation.CreatePassagerOutput{
 		ID: out.ID,
 	}
-	return c.JSON(res)
+	render.Status(r, http.StatusCreated)
+	render.Render(w, r, res)
 }

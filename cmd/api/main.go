@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 
 	"github.com/bmviniciuss/cccat12/internal/adapters/db/connections"
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest"
@@ -37,11 +39,11 @@ func main() {
 	createDriverUseCase := usecase.NewCreateDriver(driverRepository)
 	driverHandler := handlers.NewDriverHandler(createDriverUseCase)
 
-	server := rest.NewServer(
-		rideCalculatorHandler,
-		passagersHandler,
+	cs := rest.NewServer(
 		driverHandler,
+		passagersHandler,
+		rideCalculatorHandler,
 	)
-	app := server.Build()
-	app.Listen(":3000")
+	fmt.Println("Server running on port 3000")
+	http.ListenAndServe(":3000", cs.Build())
 }

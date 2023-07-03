@@ -1,0 +1,6 @@
+test:
+	go test ./...
+
+test-cover:
+	go test -cover ./...
+	go tool cover -html=coverage.out -o coverage.html

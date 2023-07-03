@@ -41,9 +41,9 @@ func (h *PassagerHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Email:    input.Email,
 		Document: input.Document,
 	})
-
 	if err != nil {
 		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
+		return
 	}
 
 	res := &presentation.CreatePassagerOutput{

@@ -1,12 +1,16 @@
 package rest
 
 import (
+	"encoding/json"
 	"io"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/handlers"
+	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
+	"github.com/bmviniciuss/cccat12/internal/adapters/repositories/mem"
+	"github.com/bmviniciuss/cccat12/internal/application/usecase"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
@@ -33,9 +37,9 @@ func Test_CalculateRide(t *testing.T) {
 
 		res, err := app.Test(req, -1)
 		assert.NoError(t, err)
-		assert.Equal(t, res.StatusCode, 200)
 		resBody, _ := io.ReadAll(res.Body)
 		defer res.Body.Close()
+		assert.Equal(t, res.StatusCode, 200)
 		assert.Equal(t, `{"price":21}`, string(resBody))
 	})
 
@@ -53,9 +57,62 @@ func Test_CalculateRide(t *testing.T) {
 
 		res, err := app.Test(req, -1)
 		assert.NoError(t, err)
-		assert.Equal(t, res.StatusCode, 422)
 		resBody, _ := io.ReadAll(res.Body)
 		defer res.Body.Close()
+		assert.Equal(t, res.StatusCode, 422)
 		assert.Equal(t, `{"message":"Invalid Date"}`, string(resBody))
+	})
+}
+
+func Test_CreatePassager(t *testing.T) {
+	t.Run("should return a response with passager id", func(t *testing.T) {
+		memRepo := mem.NewPassagerRepository()
+		usecase := usecase.NewCreatePassager(memRepo)
+		app := NewServer(
+			handlers.NewRideCalculatorHandler(),
+			handlers.NewPassagerHandler(usecase),
+		).Build()
+
+		req := httptest.NewRequest("POST", "/passagers", strings.NewReader(`{
+			"name": "Vinicius Barbosa de Medeiros",
+			"email": "test@test.com",
+			"document": "46021430085"
+		}`))
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := app.Test(req, -1)
+		assert.NoError(t, err)
+		assert.Equal(t, res.StatusCode, 200)
+		resBody, _ := io.ReadAll(res.Body)
+		defer res.Body.Close()
+
+		var out presentation.CreatePassagerOutput
+		_ = json.Unmarshal(resBody, &out)
+		assert.NotNil(t, out)
+		assert.NotNil(t, out.ID)
+	})
+
+	t.Run("should return an error response with invalid document", func(t *testing.T) {
+		memRepo := mem.NewPassagerRepository()
+		usecase := usecase.NewCreatePassager(memRepo)
+		app := NewServer(
+			handlers.NewRideCalculatorHandler(),
+			handlers.NewPassagerHandler(usecase),
+		).Build()
+
+		req := httptest.NewRequest("POST", "/passagers", strings.NewReader(`{
+			"name": "Vinicius Barbosa de Medeiros",
+			"email": "test@test.com",
+			"document": "46021430086"
+		}`))
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := app.Test(req, -1)
+		assert.NoError(t, err)
+		resBody, _ := io.ReadAll(res.Body)
+		defer res.Body.Close()
+
+		assert.Equal(t, res.StatusCode, 422)
+		assert.Equal(t, `{"message":"CPF is invalid"}`, string(resBody))
 	})
 }

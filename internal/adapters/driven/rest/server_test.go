@@ -15,9 +15,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type mockPassagerHandler struct{}
+type handlerMock struct{}
 
-func (m *mockPassagerHandler) Create(c *fiber.Ctx) error {
+func (m *handlerMock) Create(c *fiber.Ctx) error {
 	return nil
 }
 
@@ -25,7 +25,8 @@ func Test_CalculateRide(t *testing.T) {
 	t.Run("should return a ride price", func(t *testing.T) {
 		app := NewServer(
 			handlers.NewRideCalculatorHandler(),
-			&mockPassagerHandler{},
+			&handlerMock{},
+			&handlerMock{},
 		).Build()
 
 		req := httptest.NewRequest("POST", "/calculate_ride", strings.NewReader(`{
@@ -46,7 +47,8 @@ func Test_CalculateRide(t *testing.T) {
 	t.Run("should return a 422 response if date is not valid", func(t *testing.T) {
 		app := NewServer(
 			handlers.NewRideCalculatorHandler(),
-			&mockPassagerHandler{},
+			&handlerMock{},
+			&handlerMock{},
 		).Build()
 		req := httptest.NewRequest("POST", "/calculate_ride", strings.NewReader(`{
 			"segments": [
@@ -71,6 +73,7 @@ func Test_CreatePassager(t *testing.T) {
 		app := NewServer(
 			handlers.NewRideCalculatorHandler(),
 			handlers.NewPassagerHandler(usecase),
+			&handlerMock{},
 		).Build()
 
 		req := httptest.NewRequest("POST", "/passagers", strings.NewReader(`{
@@ -98,6 +101,7 @@ func Test_CreatePassager(t *testing.T) {
 		app := NewServer(
 			handlers.NewRideCalculatorHandler(),
 			handlers.NewPassagerHandler(usecase),
+			&handlerMock{},
 		).Build()
 
 		req := httptest.NewRequest("POST", "/passagers", strings.NewReader(`{

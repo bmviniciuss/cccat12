@@ -28,11 +28,20 @@ func main() {
 
 	db := pgm.GetConnection()
 	rideCalculatorHandler := handlers.NewRideCalculatorHandler()
+
 	passagerRepository := pg.NewPassagerRepository(db)
 	createPassagerUseCase := usecase.NewCreatePassager(passagerRepository)
 	passagersHandler := handlers.NewPassagerHandler(createPassagerUseCase)
 
-	server := rest.NewServer(rideCalculatorHandler, passagersHandler)
+	driverRepository := pg.NewDriverRepository(db)
+	createDriverUseCase := usecase.NewCreateDriver(driverRepository)
+	driverHandler := handlers.NewDriverHandler(createDriverUseCase)
+
+	server := rest.NewServer(
+		rideCalculatorHandler,
+		passagersHandler,
+		driverHandler,
+	)
 	app := server.Build()
 	app.Listen(":3000")
 }

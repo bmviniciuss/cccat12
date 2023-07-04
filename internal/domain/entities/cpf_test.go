@@ -63,6 +63,15 @@ func TestNewCPF(t *testing.T) {
 			wantErr: false,
 			errOut:  nil,
 		},
+		{
+			name: "should return an InvalidCPF error when cpf is all equals",
+			args: args{
+				cpf: "111.111.111-11",
+			},
+			out:     nil,
+			wantErr: true,
+			errOut:  ErrCPFInvalid,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

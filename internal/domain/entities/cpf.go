@@ -53,6 +53,11 @@ func validate(value string) error {
 	if !isInvalidLength(value) {
 		return ErrCPFInvalidLength
 	}
+
+	if hasAllDigitsEquals(value) {
+		return ErrCPFInvalid
+	}
+
 	vd := extractVerificationDigits(value)
 	d1 := calculateDigit(value, 10)
 	d2 := calculateDigit(value, 11)
@@ -66,6 +71,20 @@ func validate(value string) error {
 
 func isInvalidLength(cpf string) bool {
 	return len(cpf) == 11
+}
+
+func hasAllDigitsEquals(cpf string) bool {
+	digit := rune(cpf[0])
+	for _, char := range cpf {
+		if char != digit {
+			return false
+		}
+	}
+	return true
+}
+
+func extractVerificationDigits(value string) string {
+	return value[9:]
 }
 
 func calculateDigit(value string, factor int) int {
@@ -85,8 +104,4 @@ func calculateDigit(value string, factor int) int {
 		return 0
 	}
 	return 11 - rest
-}
-
-func extractVerificationDigits(value string) string {
-	return value[9:]
 }

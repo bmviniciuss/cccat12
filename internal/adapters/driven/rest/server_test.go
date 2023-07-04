@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,6 +24,7 @@ import (
 type mockDriverHandlers struct{}
 
 func (m *mockDriverHandlers) Create(w http.ResponseWriter, r *http.Request) {}
+func (m *mockDriverHandlers) Get(w http.ResponseWriter, r *http.Request)    {}
 
 type mockPassengerHandlers struct{}
 
@@ -251,9 +253,10 @@ func Test_CreateDriver(t *testing.T) {
 	})
 	t.Run("should return a response with driver id", func(t *testing.T) {
 		driverRepo := pg.NewDriverRepository(db)
-		usecase := usecase.NewCreateDriver(driverRepo)
+		createDriver := usecase.NewCreateDriver(driverRepo)
+		getDriver := usecase.NewGetDriver(driverRepo)
 		mux := NewServer(
-			handlers.NewDriverHandler(usecase),
+			handlers.NewDriverHandler(createDriver, getDriver),
 			&mockPassengerHandlers{},
 			&mockRideCalculatorHandlers{},
 		).Build()
@@ -280,5 +283,98 @@ func Test_CreateDriver(t *testing.T) {
 		err := json.Unmarshal(resBody, &res)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, res.ID)
+	})
+}
+
+type driverRow struct {
+	ID          string `db:"id"`
+	Name        string `db:"name"`
+	Document    string `db:"document"`
+	PlateNumber string `db:"plate_number"`
+}
+
+func Test_GetDriver(t *testing.T) {
+	ctx := context.Background()
+	pgm := connections.NewPostgresManager()
+
+	err := pgm.Connect(ctx, connections.PostgresConfig{
+		Host:     "localhost",
+		Port:     "5432",
+		User:     "cccar_user",
+		Password: "1234",
+		Database: "cccar",
+	})
+
+	db := pgm.GetConnection()
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	t.Cleanup(func() {
+		pgm.CloseConnection()
+	})
+	t.Run("should return a response with driver", func(t *testing.T) {
+		driverRepo := pg.NewDriverRepository(db)
+		createDriver := usecase.NewCreateDriver(driverRepo)
+		getDriver := usecase.NewGetDriver(driverRepo)
+		mux := NewServer(
+			handlers.NewDriverHandler(createDriver, getDriver),
+			&mockPassengerHandlers{},
+			&mockRideCalculatorHandlers{},
+		).Build()
+
+		driver := driverRow{}
+		err := db.Get(&driver, "SELECT id, name, document, plate_number FROM cccar.drivers LIMIT 1")
+		if err != nil {
+			// TODO: maybe insert a driver here
+			t.Error(err)
+			return
+		}
+
+		req := httptest.NewRequest(
+			http.MethodGet,
+			fmt.Sprintf("/drivers/%s", driver.ID),
+			nil,
+		)
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, 200, rec.Code)
+	})
+
+	t.Run("should return 404 if driver is not found", func(t *testing.T) {
+		driverRepo := pg.NewDriverRepository(db)
+		createDriver := usecase.NewCreateDriver(driverRepo)
+		getDriver := usecase.NewGetDriver(driverRepo)
+		mux := NewServer(
+			handlers.NewDriverHandler(createDriver, getDriver),
+			&mockPassengerHandlers{},
+			&mockRideCalculatorHandlers{},
+		).Build()
+
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(
+			http.MethodGet,
+			fmt.Sprintf("/drivers/%s", entities.NewULID().String()),
+			nil,
+		)
+		reqID := entities.NewULID().String()
+		req.Header.Set(middlewares.RequestIDHeader, reqID)
+		req.Header.Set("Content-Type", "application/json")
+		mux.ServeHTTP(rec, req)
+
+		resBody := cleanString(rec.Body.String())
+
+		assert.Equal(t, 404, rec.Code)
+		assert.Equal(t,
+			buildMapResponse(map[string]interface{}{
+				"id":      reqID,
+				"message": "Not Found",
+			}),
+			resBody,
+		)
 	})
 }

@@ -37,7 +37,8 @@ func main() {
 
 	driverRepository := pg.NewDriverRepository(db)
 	createDriverUseCase := usecase.NewCreateDriver(driverRepository)
-	driverHandler := handlers.NewDriverHandler(createDriverUseCase)
+	getDriverUseCase := usecase.NewGetDriver(driverRepository)
+	driverHandler := handlers.NewDriverHandler(createDriverUseCase, getDriverUseCase)
 
 	cs := rest.NewServer(
 		driverHandler,

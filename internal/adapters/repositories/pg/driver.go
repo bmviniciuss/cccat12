@@ -2,9 +2,12 @@ package pg
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/bmviniciuss/cccat12/internal/application/repository"
 	"github.com/bmviniciuss/cccat12/internal/domain/entities"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -41,4 +44,51 @@ func (r *DriverRepository) Create(ctx context.Context, driver *entities.Driver) 
 	}
 
 	return nil
+}
+
+var getDriverQuery = `
+SELECT 
+	id, "name", "document", plate_number
+FROM cccar.drivers
+WHERE id = $1;
+`
+
+type driverRow struct {
+	ID          string `db:"id"`
+	Name        string `db:"name"`
+	Document    string `db:"document"`
+	PlateNumber string `db:"plate_number"`
+}
+
+func (r *DriverRepository) Get(ctx context.Context, id string) (*entities.Driver, error) {
+	stmt, err := r.db.PreparexContext(ctx, getDriverQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	var row driverRow
+	err = stmt.QueryRowxContext(ctx, id).StructScan(&row)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, repository.ErrorDriverNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	uuid, err := uuid.Parse(row.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	document, err := entities.NewCPF(row.Document)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Driver{
+		ID:          uuid,
+		Name:        row.Name,
+		Document:    *document,
+		PlateNumber: row.PlateNumber,
+	}, nil
 }

@@ -38,6 +38,7 @@ func (s *Server) Build() *chi.Mux {
 
 	r.Post("/passengers", s.passengerHandlers.Create)
 	r.Post("/drivers", s.driverHandlers.Create)
+	r.Get("/drivers/{id}", s.driverHandlers.Get)
 	r.Post("/calculate_ride", s.rideCalculatorHandlers.Calculate)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {

@@ -15,3 +15,14 @@ type CreateDriverOutput struct {
 func (cdo *CreateDriverOutput) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type GetDriverOutput struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Document    string `json:"document"`
+	PlateNumber string `json:"plate_number"`
+}
+
+func (gdo *GetDriverOutput) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

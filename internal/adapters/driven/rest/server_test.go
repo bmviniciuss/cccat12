@@ -54,6 +54,29 @@ func cleanString(s string) string {
 	return strings.TrimSpace(s)
 }
 
+func Test_NotFound(t *testing.T) {
+	t.Run("should return 404 response", func(t *testing.T) {
+		mux := NewServer(
+			&mockDriverHandlers{},
+			&mockPassagerHandlers{},
+			&mockRideCalculatorHandlers{},
+		).Build()
+		req := httptest.NewRequest("POST", "/not_found", nil)
+		id := entities.NewULID().String()
+		req.Header.Set(middlewares.RequestIDHeader, id)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		resBody := strings.TrimSpace(rec.Body.String())
+		assert.Equal(t, rec.Code, 404)
+		assert.Equal(t, buildMapResponse(
+			map[string]interface{}{
+				"id":      id,
+				"message": "Not Found",
+			},
+		), resBody)
+	})
+}
+
 func Test_CalculateRide(t *testing.T) {
 	t.Run("should return a ride price", func(t *testing.T) {
 		mux := NewServer(

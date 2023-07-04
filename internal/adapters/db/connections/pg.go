@@ -48,5 +48,8 @@ func (p *PostgresManager) GetConnection() *sqlx.DB {
 }
 
 func (p *PostgresManager) CloseConnection() error {
+	if p.db == nil {
+		return nil
+	}
 	return p.db.Close()
 }

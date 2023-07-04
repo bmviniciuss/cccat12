@@ -1,18 +1,22 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/bmviniciuss/cccat12/internal/adapters/db/connections"
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/handlers"
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/middlewares"
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
 	"github.com/bmviniciuss/cccat12/internal/adapters/repositories/mem"
+	"github.com/bmviniciuss/cccat12/internal/adapters/repositories/pg"
 	"github.com/bmviniciuss/cccat12/internal/application/usecase"
 	"github.com/bmviniciuss/cccat12/internal/domain/entities"
+	"github.com/bmviniciuss/cccat12/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,7 +50,7 @@ func Test_NotFound(t *testing.T) {
 			&mockPassengerHandlers{},
 			&mockRideCalculatorHandlers{},
 		).Build()
-		req := httptest.NewRequest("POST", "/not_found", nil)
+		req := httptest.NewRequest(http.MethodPost, "/not_found", nil)
 		id := entities.NewULID().String()
 		req.Header.Set(middlewares.RequestIDHeader, id)
 		rec := httptest.NewRecorder()
@@ -70,11 +74,22 @@ func Test_CalculateRide(t *testing.T) {
 			handlers.NewRideCalculatorHandler(),
 		).Build()
 
-		req := httptest.NewRequest("POST", "/calculate_ride", strings.NewReader(`{
-			"segments": [
-				{ "distance": 10,	"date": "2021-03-01T10:00:00" }
-			]
-		}`))
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/calculate_ride",
+			strings.NewReader(
+				testutils.StringFromMap(
+					map[string]interface{}{
+						"segments": []map[string]interface{}{
+							{
+								"distance": 10,
+								"date":     "2021-03-01T10:00:00",
+							},
+						},
+					},
+				),
+			),
+		)
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -95,11 +110,23 @@ func Test_CalculateRide(t *testing.T) {
 			handlers.NewRideCalculatorHandler(),
 		).Build()
 
-		req := httptest.NewRequest("POST", "/calculate_ride", strings.NewReader(`{
-			"segments": [
-				{ "distance": 10,	"date": "2021-03-0110:00:00" }
-			]
-		}`))
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/calculate_ride",
+			strings.NewReader(
+				testutils.StringFromMap(
+					map[string]interface{}{
+						"segments": []map[string]interface{}{
+							{
+								"distance": 10,
+								"date":     "2021-03-0110:00:00",
+							},
+						},
+					},
+				),
+			),
+		)
+
 		req.Header.Set("Content-Type", "application/json")
 		id := entities.NewULID().String()
 		req.Header.Set(middlewares.RequestIDHeader, id)
@@ -127,11 +154,19 @@ func Test_CreatePassenger(t *testing.T) {
 			&mockRideCalculatorHandlers{},
 		).Build()
 
-		req := httptest.NewRequest("POST", "/passengers", strings.NewReader(`{
-			"name": "Vinicius Barbosa de Medeiros",
-			"email": "test@test.com",
-			"document": "46021430085"
-		}`))
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/passengers",
+			strings.NewReader(
+				testutils.StringFromMap(
+					map[string]interface{}{
+						"name":     "Vinicius Barbosa de Medeiros",
+						"email":    "test@test.com",
+						"document": testutils.GenerateRandomCPF(),
+					},
+				),
+			),
+		)
 		req.Header.Set("Content-Type", "application/json")
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -154,11 +189,19 @@ func Test_CreatePassenger(t *testing.T) {
 			&mockRideCalculatorHandlers{},
 		).Build()
 
-		req := httptest.NewRequest("POST", "/passengers", strings.NewReader(`{
-			"name": "Vinicius Barbosa de Medeiros",
-			"email": "test@test.com",
-			"document": "46021430086"
-		}`))
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/passengers",
+			strings.NewReader(
+				testutils.StringFromMap(
+					map[string]interface{}{
+						"name":     "Vinicius Barbosa de Medeiros",
+						"email":    "test@test.com",
+						"document": "11111111111",
+					},
+				),
+			),
+		)
 		req.Header.Set("Content-Type", "application/json")
 		id := entities.NewULID().String()
 		req.Header.Set(middlewares.RequestIDHeader, id)
@@ -175,5 +218,67 @@ func Test_CreatePassenger(t *testing.T) {
 			}),
 			resBody,
 		)
+	})
+}
+
+func Test_CreateDriver(t *testing.T) {
+	ctx := context.Background()
+	pgm := connections.NewPostgresManager()
+
+	err := pgm.Connect(ctx, connections.PostgresConfig{
+		Host:     "localhost",
+		Port:     "5432",
+		User:     "cccar_user",
+		Password: "1234",
+		Database: "cccar",
+	})
+
+	db := pgm.GetConnection()
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM cccar.drivers where true")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	t.Cleanup(func() {
+		pgm.CloseConnection()
+	})
+	t.Run("should return a response with driver id", func(t *testing.T) {
+		driverRepo := pg.NewDriverRepository(db)
+		usecase := usecase.NewCreateDriver(driverRepo)
+		mux := NewServer(
+			handlers.NewDriverHandler(usecase),
+			&mockPassengerHandlers{},
+			&mockRideCalculatorHandlers{},
+		).Build()
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/drivers",
+			strings.NewReader(
+				testutils.StringFromMap(map[string]interface{}{
+					"name":      "Vinicius Barbosa de Medeiros",
+					"email":     "test@test.com",
+					"document":  testutils.GenerateRandomCPF(),
+					"car_plate": "ABC-1234",
+				}),
+			),
+		)
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+
+		assert.Equal(t, 201, rec.Code)
+		resBody := rec.Body.Bytes()
+		var res presentation.CreateDriverOutput
+		err := json.Unmarshal(resBody, &res)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, res.ID)
 	})
 }

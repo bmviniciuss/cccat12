@@ -6,6 +6,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_ValidCPF(t *testing.T) {
+	validCPFS := []string{
+		"473.975.710-93",
+		"47397571093",
+		"473975710-93",
+		"473.975.71093",
+		"732.663.170-09",
+	}
+
+	for _, value := range validCPFS {
+		t.Run("should return true when cpf is valid", func(t *testing.T) {
+			cpf, err := NewCPF(value)
+			assert.NoError(t, err)
+			assert.NotEmpty(t, cpf.String())
+		})
+	}
+}
+
 func TestNewCPF(t *testing.T) {
 	type args struct {
 		cpf string

@@ -42,6 +42,7 @@ func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
+		return
 	}
 	out := &presentation.CreateDriverOutput{
 		ID: res.ID,

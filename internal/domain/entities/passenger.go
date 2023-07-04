@@ -2,20 +2,20 @@ package entities
 
 import "github.com/google/uuid"
 
-type Passager struct {
+type Passenger struct {
 	ID       uuid.UUID
 	Name     string
 	Email    string
 	Document CPF
 }
 
-func CreatePassager(name, email, document string) (*Passager, error) {
+func CreatePassenger(name, email, document string) (*Passenger, error) {
 	cpf, err := NewCPF(document)
 	if err != nil {
 		return nil, err
 	}
 
-	p := &Passager{
+	p := &Passenger{
 		ID:       NewULID(),
 		Name:     name,
 		Email:    email,

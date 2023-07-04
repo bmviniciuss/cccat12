@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS cccar;
 
-CREATE TABLE IF NOT EXISTS cccar.passagers (
+CREATE TABLE IF NOT EXISTS cccar.passengers (
 	"id" uuid PRIMARY KEY NOT null,
 	"name" varchar(255) NOT NULL,
 	"email" varchar(255) UNIQUE NOT NULL,

@@ -8,28 +8,28 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type PassagerRepository struct {
+type PassengerRepository struct {
 	db *sqlx.DB
 }
 
-func NewPassagerRepository(db *sqlx.DB) *PassagerRepository {
-	return &PassagerRepository{
+func NewPassengerRepository(db *sqlx.DB) *PassengerRepository {
+	return &PassengerRepository{
 		db: db,
 	}
 }
 
 var (
-	_ repository.Passager = (*PassagerRepository)(nil)
+	_ repository.Passenger = (*PassengerRepository)(nil)
 )
 
-var insertPassagerQuery = `
-INSERT INTO cccar.passagers
+var insertPassengerQuery = `
+INSERT INTO cccar.passengers
 	(id, "name", email, "document", created_at, updated_at)
 VALUES($1, $2, $3, $4, now(), now());
 `
 
-func (r *PassagerRepository) Create(ctx context.Context, p *entities.Passager) (err error) {
-	stmt, err := r.db.PrepareContext(ctx, insertPassagerQuery)
+func (r *PassengerRepository) Create(ctx context.Context, p *entities.Passenger) (err error) {
+	stmt, err := r.db.PrepareContext(ctx, insertPassengerQuery)
 	if err != nil {
 		return err
 	}

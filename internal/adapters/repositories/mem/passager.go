@@ -7,20 +7,20 @@ import (
 	"github.com/bmviniciuss/cccat12/internal/domain/entities"
 )
 
-type PassagerRepository struct {
-	passagers map[string]*entities.Passager
-	lock      sync.Mutex
+type PassengerRepository struct {
+	passengers map[string]*entities.Passenger
+	lock       sync.Mutex
 }
 
-func NewPassagerRepository() *PassagerRepository {
-	return &PassagerRepository{
-		passagers: make(map[string]*entities.Passager),
+func NewPassengerRepository() *PassengerRepository {
+	return &PassengerRepository{
+		passengers: make(map[string]*entities.Passenger),
 	}
 }
 
-func (r *PassagerRepository) Create(ctx context.Context, p *entities.Passager) (err error) {
+func (r *PassengerRepository) Create(ctx context.Context, p *entities.Passenger) (err error) {
 	r.lock.Lock()
-	r.passagers[p.ID.String()] = p
+	r.passengers[p.ID.String()] = p
 	r.lock.Unlock()
 	return nil
 }

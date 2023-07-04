@@ -14,18 +14,18 @@ import (
 
 type Server struct {
 	driverHandlers         ports.DriverHandlersPort
-	passagerHandlers       ports.PassagerHandlersPort
+	passengerHandlers      ports.PassengerHandlersPort
 	rideCalculatorHandlers ports.RideCalculatorHandlersPort
 }
 
 func NewServer(
 	driverHandlers ports.DriverHandlersPort,
-	passagerHandlers ports.PassagerHandlersPort,
+	passengerHandlers ports.PassengerHandlersPort,
 	rideCalculatorHandlers ports.RideCalculatorHandlersPort,
 ) *Server {
 	return &Server{
 		driverHandlers:         driverHandlers,
-		passagerHandlers:       passagerHandlers,
+		passengerHandlers:      passengerHandlers,
 		rideCalculatorHandlers: rideCalculatorHandlers,
 	}
 }
@@ -36,8 +36,8 @@ func (s *Server) Build() *chi.Mux {
 	r.Use(middlewares.RequestID)
 	r.Use(middleware.Logger)
 
-	r.Post("/passagers", s.passagerHandlers.Create)
-	r.Post("/passagers", s.passagerHandlers.Create)
+	r.Post("/passengers", s.passengerHandlers.Create)
+	r.Post("/drivers", s.driverHandlers.Create)
 	r.Post("/calculate_ride", s.rideCalculatorHandlers.Calculate)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {

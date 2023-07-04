@@ -16,28 +16,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// import (
-// 	"encoding/json"
-// 	"io"
-// 	"net/http/httptest"
-// 	"strings"
-// 	"testing"
-
-// 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/handlers"
-// 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
-// 	"github.com/bmviniciuss/cccat12/internal/adapters/repositories/mem"
-// 	"github.com/bmviniciuss/cccat12/internal/application/usecase"
-// 	"github.com/gofiber/fiber/v2"
-// 	"github.com/stretchr/testify/assert"
-// )
-
 type mockDriverHandlers struct{}
 
 func (m *mockDriverHandlers) Create(w http.ResponseWriter, r *http.Request) {}
 
-type mockPassagerHandlers struct{}
+type mockPassengerHandlers struct{}
 
-func (m *mockPassagerHandlers) Create(w http.ResponseWriter, r *http.Request) {}
+func (m *mockPassengerHandlers) Create(w http.ResponseWriter, r *http.Request) {}
 
 type mockRideCalculatorHandlers struct{}
 
@@ -58,7 +43,7 @@ func Test_NotFound(t *testing.T) {
 	t.Run("should return 404 response", func(t *testing.T) {
 		mux := NewServer(
 			&mockDriverHandlers{},
-			&mockPassagerHandlers{},
+			&mockPassengerHandlers{},
 			&mockRideCalculatorHandlers{},
 		).Build()
 		req := httptest.NewRequest("POST", "/not_found", nil)
@@ -81,7 +66,7 @@ func Test_CalculateRide(t *testing.T) {
 	t.Run("should return a ride price", func(t *testing.T) {
 		mux := NewServer(
 			&mockDriverHandlers{},
-			&mockPassagerHandlers{},
+			&mockPassengerHandlers{},
 			handlers.NewRideCalculatorHandler(),
 		).Build()
 
@@ -106,7 +91,7 @@ func Test_CalculateRide(t *testing.T) {
 
 		mux := NewServer(
 			&mockDriverHandlers{},
-			&mockPassagerHandlers{},
+			&mockPassengerHandlers{},
 			handlers.NewRideCalculatorHandler(),
 		).Build()
 
@@ -132,17 +117,17 @@ func Test_CalculateRide(t *testing.T) {
 	})
 }
 
-func Test_CreatePassager(t *testing.T) {
-	t.Run("should return a response with passager id", func(t *testing.T) {
-		memRepo := mem.NewPassagerRepository()
-		usecase := usecase.NewCreatePassager(memRepo)
+func Test_CreatePassenger(t *testing.T) {
+	t.Run("should return a response with passenger id", func(t *testing.T) {
+		memRepo := mem.NewPassengerRepository()
+		usecase := usecase.NewCreatePassenger(memRepo)
 		mux := NewServer(
 			&mockDriverHandlers{},
-			handlers.NewPassagerHandler(usecase),
+			handlers.NewPassengerHandler(usecase),
 			&mockRideCalculatorHandlers{},
 		).Build()
 
-		req := httptest.NewRequest("POST", "/passagers", strings.NewReader(`{
+		req := httptest.NewRequest("POST", "/passengers", strings.NewReader(`{
 			"name": "Vinicius Barbosa de Medeiros",
 			"email": "test@test.com",
 			"document": "46021430085"
@@ -154,22 +139,22 @@ func Test_CreatePassager(t *testing.T) {
 		resBody := rec.Body.Bytes()
 		assert.Equal(t, rec.Code, 201)
 
-		var res presentation.CreatePassagerOutput
+		var res presentation.CreatePassengerOutput
 		err := json.Unmarshal(resBody, &res)
 		assert.NoError(t, err)
 		assert.NotEmpty(t, res.ID)
 	})
 
 	t.Run("should return an error response with invalid document", func(t *testing.T) {
-		memRepo := mem.NewPassagerRepository()
-		usecase := usecase.NewCreatePassager(memRepo)
+		memRepo := mem.NewPassengerRepository()
+		usecase := usecase.NewCreatePassenger(memRepo)
 		mux := NewServer(
 			&mockDriverHandlers{},
-			handlers.NewPassagerHandler(usecase),
+			handlers.NewPassengerHandler(usecase),
 			&mockRideCalculatorHandlers{},
 		).Build()
 
-		req := httptest.NewRequest("POST", "/passagers", strings.NewReader(`{
+		req := httptest.NewRequest("POST", "/passengers", strings.NewReader(`{
 			"name": "Vinicius Barbosa de Medeiros",
 			"email": "test@test.com",
 			"document": "46021430086"

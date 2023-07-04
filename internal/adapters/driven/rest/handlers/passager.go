@@ -11,32 +11,32 @@ import (
 	"github.com/go-chi/render"
 )
 
-type PassagerHandler struct {
-	createPassager *usecase.CreatePassager
+type PassengerHandler struct {
+	createPassenger *usecase.CreatePassenger
 }
 
-func NewPassagerHandler(createPassager *usecase.CreatePassager) *PassagerHandler {
-	return &PassagerHandler{
-		createPassager: createPassager,
+func NewPassengerHandler(createPassenger *usecase.CreatePassenger) *PassengerHandler {
+	return &PassengerHandler{
+		createPassenger: createPassenger,
 	}
 }
 
 var (
-	_ ports.PassagerHandlersPort = (*PassagerHandler)(nil)
+	_ ports.PassengerHandlersPort = (*PassengerHandler)(nil)
 )
 
-func (h *PassagerHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *PassengerHandler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	reqID, _ := customcontext.RequestID(ctx)
 
-	var input presentation.CreatePassagerInput
+	var input presentation.CreatePassengerInput
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		render.Render(w, r, presentation.ErrBadRequest(reqID, err))
 		return
 	}
 
-	out, err := h.createPassager.Execute(ctx, usecase.CreatePassagerInput{
+	out, err := h.createPassenger.Execute(ctx, usecase.CreatePassengerInput{
 		Name:     input.Name,
 		Email:    input.Email,
 		Document: input.Document,
@@ -46,7 +46,7 @@ func (h *PassagerHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := &presentation.CreatePassagerOutput{
+	res := &presentation.CreatePassengerOutput{
 		ID: out.ID,
 	}
 	render.Status(r, http.StatusCreated)

@@ -6,7 +6,7 @@ type DriverHandlersPort interface {
 	Create(w http.ResponseWriter, r *http.Request)
 }
 
-type PassagerHandlersPort interface {
+type PassengerHandlersPort interface {
 	Create(w http.ResponseWriter, r *http.Request)
 }
 

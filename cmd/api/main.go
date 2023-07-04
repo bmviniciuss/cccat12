@@ -31,9 +31,9 @@ func main() {
 	db := pgm.GetConnection()
 	rideCalculatorHandler := handlers.NewRideCalculatorHandler()
 
-	passagerRepository := pg.NewPassagerRepository(db)
-	createPassagerUseCase := usecase.NewCreatePassager(passagerRepository)
-	passagersHandler := handlers.NewPassagerHandler(createPassagerUseCase)
+	passengerRepository := pg.NewPassengerRepository(db)
+	createPassengerUseCase := usecase.NewCreatePassenger(passengerRepository)
+	passengersHandler := handlers.NewPassengerHandler(createPassengerUseCase)
 
 	driverRepository := pg.NewDriverRepository(db)
 	createDriverUseCase := usecase.NewCreateDriver(driverRepository)
@@ -41,9 +41,12 @@ func main() {
 
 	cs := rest.NewServer(
 		driverHandler,
-		passagersHandler,
+		passengersHandler,
 		rideCalculatorHandler,
 	)
 	fmt.Println("Server running on port 3000")
-	http.ListenAndServe(":3000", cs.Build())
+	err = http.ListenAndServe(":3000", cs.Build())
+	if err != nil {
+		panic(err)
+	}
 }

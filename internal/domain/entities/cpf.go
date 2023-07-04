@@ -3,6 +3,7 @@ package entities
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -19,17 +20,20 @@ var (
 	ErrCPFNonDigit      = errors.New("CPF contains non digit characters")
 )
 
-func NewCPF(cpf string) (*CPF, error) {
-	cleanCPF := removeSeparators(cpf)
-	if !isNumericString(cleanCPF) {
-		return nil, ErrCPFNonDigit
-	}
-	model := CPF(cleanCPF)
-	err := model.Validate()
+func NewCPF(value string) (*CPF, error) {
+	cleanValue := cleanCPF(value)
+	err := validate(cleanValue)
 	if err != nil {
 		return nil, err
 	}
+	model := CPF(cleanValue)
 	return &model, nil
+}
+
+func cleanCPF(value string) string {
+	cleanValue := removeSeparators(value)
+	cleanValue = extractDigits(cleanValue)
+	return cleanValue
 }
 
 func removeSeparators(cpf string) string {
@@ -39,60 +43,50 @@ func removeSeparators(cpf string) string {
 	return str
 }
 
-func isNumericString(str string) bool {
-	_, err := strconv.Atoi(str)
-	return err == nil
+func extractDigits(value string) string {
+	re := regexp.MustCompile(`\d+`)
+	parts := re.FindAllString(value, -1)
+	return strings.Join(parts, "")
 }
 
-func (cpf CPF) Validate() error {
-	if len(cpf) != 11 {
+func validate(value string) error {
+	if !isInvalidLength(value) {
 		return ErrCPFInvalidLength
 	}
+	vd := extractVerificationDigits(value)
+	d1 := calculateDigit(value, 10)
+	d2 := calculateDigit(value, 11)
 
-	err := cpf.validateDigit(9, string(cpf.String()[9]), 10)
-	if err != nil {
-		return ErrCPFInvalid
-	}
-
-	err = cpf.validateDigit(10, string(cpf.String()[10]), 11)
-	if err != nil {
-		return ErrCPFInvalid
-	}
-
-	return nil
-}
-
-func (cpf CPF) validateDigit(offset int, digit string, multiplier int) error {
-	computedD, err := calculateDigit(cpf.String()[:offset], multiplier)
-	if err != nil {
-		return err
-	}
-
-	d, err := strconv.Atoi(digit)
-	if err != nil {
-		return err
-	}
-
-	if computedD != d {
+	if vd != fmt.Sprintf("%d%d", d1, d2) {
 		return ErrCPFInvalid
 	}
 
 	return nil
 }
 
-func calculateDigit(substr string, multiplierStart int) (int, error) {
+func isInvalidLength(cpf string) bool {
+	return len(cpf) == 11
+}
+
+func calculateDigit(value string, factor int) int {
 	sum := 0
-	fmt.Println()
-	for i := 0; i < len(substr); i++ {
-		digit, err := strconv.Atoi(string(substr[i]))
-		if err != nil {
-			return -1, nil
+	for _, digit := range value {
+		if factor < 2 {
+			break
 		}
-		sum += digit * (multiplierStart - i)
+
+		digit, _ := strconv.Atoi(string(digit))
+		sum += digit * factor
+		factor--
 	}
+
 	rest := sum % 11
 	if rest < 2 {
-		return 0, nil
+		return 0
 	}
-	return 11 - rest, nil
+	return 11 - rest
+}
+
+func extractVerificationDigits(value string) string {
+	return value[9:]
 }

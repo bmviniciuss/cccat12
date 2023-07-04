@@ -37,15 +37,6 @@ func TestNewCPF(t *testing.T) {
 			errOut:  ErrCPFInvalidLength,
 		},
 		{
-			name: "should return an ErrCPFNonDigit if cpf have non digit characters",
-			args: args{
-				cpf: "123.1fds.123-122",
-			},
-			out:     nil,
-			wantErr: true,
-			errOut:  ErrCPFNonDigit,
-		},
-		{
 			name: "should return an InvalidCPF error when cpf is invalid when d1 is invalid",
 			args: args{
 				cpf: "473.975.710-83",

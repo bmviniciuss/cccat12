@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
@@ -64,10 +63,7 @@ func (h *DriverHandler) Get(w http.ResponseWriter, r *http.Request) {
 	reqID, _ := customcontext.RequestID(ctx)
 	id := chi.URLParam(r, "id")
 	res, err := h.getDriver.Execute(ctx, id)
-	fmt.Printf("res: %+v\n", res)
-	fmt.Printf("err: %+v\n", err)
 	if errors.Is(err, usecase.ErrDriverNotFound) {
-		fmt.Println("TA CAINDO AQUI")
 		render.Render(w, r, presentation.ErrNotFound(reqID, err))
 		return
 	}

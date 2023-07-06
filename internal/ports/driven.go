@@ -9,6 +9,7 @@ type DriverHandlersPort interface {
 
 type PassengerHandlersPort interface {
 	Create(w http.ResponseWriter, r *http.Request)
+	Get(w http.ResponseWriter, r *http.Request)
 }
 
 type RideCalculatorHandlersPort interface {

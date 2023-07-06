@@ -18,6 +18,8 @@ import (
 	"github.com/bmviniciuss/cccat12/internal/application/usecase"
 	"github.com/bmviniciuss/cccat12/internal/domain/entities"
 	"github.com/bmviniciuss/cccat12/testutils"
+	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,6 +31,7 @@ func (m *mockDriverHandlers) Get(w http.ResponseWriter, r *http.Request)    {}
 type mockPassengerHandlers struct{}
 
 func (m *mockPassengerHandlers) Create(w http.ResponseWriter, r *http.Request) {}
+func (m *mockPassengerHandlers) Get(w http.ResponseWriter, r *http.Request)    {}
 
 type mockRideCalculatorHandlers struct{}
 
@@ -43,6 +46,26 @@ func cleanString(s string) string {
 	s = strings.ReplaceAll(s, "\t", "")
 	s = strings.ReplaceAll(s, "\n", "")
 	return strings.TrimSpace(s)
+}
+
+func buildTestServer(db *sqlx.DB) *chi.Mux {
+	driverRepo := pg.NewDriverRepository(db)
+	createDriverUseCase := usecase.NewCreateDriver(driverRepo)
+	getDriverUseCase := usecase.NewGetDriver(driverRepo)
+	driverHandler := handlers.NewDriverHandler(createDriverUseCase, getDriverUseCase)
+
+	passengerRepo := pg.NewPassengerRepository(db)
+	getPassengerUseCase := usecase.NewGetPassenger(passengerRepo)
+	createPassengerUseCase := usecase.NewCreatePassenger(passengerRepo)
+	passengerHandler := handlers.NewPassengerHandler(createPassengerUseCase, getPassengerUseCase)
+
+	rideCalculatorHandler := handlers.NewRideCalculatorHandler()
+
+	return NewServer(
+		driverHandler,
+		passengerHandler,
+		rideCalculatorHandler,
+	).Build()
 }
 
 func Test_NotFound(t *testing.T) {
@@ -149,10 +172,11 @@ func Test_CalculateRide(t *testing.T) {
 func Test_CreatePassenger(t *testing.T) {
 	t.Run("should return a response with passenger id", func(t *testing.T) {
 		memRepo := mem.NewPassengerRepository()
-		usecase := usecase.NewCreatePassenger(memRepo)
+		createPassengerUseCase := usecase.NewCreatePassenger(memRepo)
+		getPassenger := usecase.NewGetPassenger(memRepo)
 		mux := NewServer(
 			&mockDriverHandlers{},
-			handlers.NewPassengerHandler(usecase),
+			handlers.NewPassengerHandler(createPassengerUseCase, getPassenger),
 			&mockRideCalculatorHandlers{},
 		).Build()
 
@@ -184,10 +208,11 @@ func Test_CreatePassenger(t *testing.T) {
 
 	t.Run("should return an error response with invalid document", func(t *testing.T) {
 		memRepo := mem.NewPassengerRepository()
-		usecase := usecase.NewCreatePassenger(memRepo)
+		createPassengerUseCase := usecase.NewCreatePassenger(memRepo)
+		getPassenger := usecase.NewGetPassenger(memRepo)
 		mux := NewServer(
 			&mockDriverHandlers{},
-			handlers.NewPassengerHandler(usecase),
+			handlers.NewPassengerHandler(createPassengerUseCase, getPassenger),
 			&mockRideCalculatorHandlers{},
 		).Build()
 
@@ -368,6 +393,100 @@ func Test_GetDriver(t *testing.T) {
 
 		resBody := cleanString(rec.Body.String())
 
+		assert.Equal(t, 404, rec.Code)
+		assert.Equal(t,
+			buildMapResponse(map[string]interface{}{
+				"id":      reqID,
+				"message": "Not Found",
+			}),
+			resBody,
+		)
+	})
+}
+
+func Test_GetPassenger(t *testing.T) {
+	ctx := context.Background()
+	pgm := connections.NewPostgresManager()
+
+	err := pgm.Connect(ctx, connections.PostgresConfig{
+		Host:     "localhost",
+		Port:     "5432",
+		User:     "cccar_user",
+		Password: "1234",
+		Database: "cccar",
+	})
+
+	db := pgm.GetConnection()
+
+	_, err = db.Exec("DELETE FROM cccar.passengers where true")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	t.Cleanup(func() {
+		pgm.CloseConnection()
+	})
+
+	t.Run("should return a response with passenger", func(t *testing.T) {
+		mux := buildTestServer(db)
+		// create a passenger
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/passengers",
+			strings.NewReader(
+				testutils.StringFromMap(
+					map[string]interface{}{
+						"name":     "Vinicius Barbosa de Medeiros",
+						"email":    "test@test.com",
+						"document": testutils.GenerateRandomCPF(),
+					},
+				),
+			),
+		)
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		resBody := rec.Body.Bytes()
+
+		var cpo presentation.CreatePassengerOutput
+		err := json.Unmarshal(resBody, &cpo)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		req2 := httptest.NewRequest(
+			http.MethodGet,
+			fmt.Sprintf("/passengers/%s", cpo.ID),
+			nil,
+		)
+		req.Header.Set("Content-Type", "application/json")
+		rec2 := httptest.NewRecorder()
+		mux.ServeHTTP(rec2, req2)
+		assert.Equal(t, 200, rec2.Result().StatusCode)
+	})
+
+	t.Run("should return 404 if passenger does not exists", func(t *testing.T) {
+		mux := buildTestServer(db)
+		randomID := entities.NewULID().String()
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest(
+			http.MethodGet,
+			fmt.Sprintf("/passengers/%s", randomID),
+			nil,
+		)
+		reqID := entities.NewULID().String()
+		req.Header.Set(middlewares.RequestIDHeader, reqID)
+		req.Header.Set("Content-Type", "application/json")
+		mux.ServeHTTP(rec, req)
+
+		resBody := cleanString(rec.Body.String())
 		assert.Equal(t, 404, rec.Code)
 		assert.Equal(t,
 			buildMapResponse(map[string]interface{}{

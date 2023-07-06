@@ -36,6 +36,7 @@ func (s *Server) Build() *chi.Mux {
 	r.Use(middlewares.RequestID)
 	r.Use(middleware.Logger)
 
+	r.Get("/passengers/{id}", s.passengerHandlers.Get)
 	r.Post("/passengers", s.passengerHandlers.Create)
 	r.Post("/drivers", s.driverHandlers.Create)
 	r.Get("/drivers/{id}", s.driverHandlers.Get)

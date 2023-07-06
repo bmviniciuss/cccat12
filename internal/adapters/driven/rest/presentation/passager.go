@@ -15,3 +15,13 @@ type CreatePassengerOutput struct {
 func (o *CreatePassengerOutput) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
+
+type GetPassengerOutput struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+func (o *GetPassengerOutput) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

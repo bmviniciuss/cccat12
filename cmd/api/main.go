@@ -33,7 +33,8 @@ func main() {
 
 	passengerRepository := pg.NewPassengerRepository(db)
 	createPassengerUseCase := usecase.NewCreatePassenger(passengerRepository)
-	passengersHandler := handlers.NewPassengerHandler(createPassengerUseCase)
+	getPassengerUseCase := usecase.NewGetPassenger(passengerRepository)
+	passengersHandler := handlers.NewPassengerHandler(createPassengerUseCase, getPassengerUseCase)
 
 	driverRepository := pg.NewDriverRepository(db)
 	createDriverUseCase := usecase.NewCreateDriver(driverRepository)

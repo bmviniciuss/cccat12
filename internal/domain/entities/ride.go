@@ -20,8 +20,8 @@ func NewRide() *Ride {
 	}
 }
 
-func (r *Ride) AddSegment(distance float64, date time.Time) error {
-	seg, err := NewSegment(distance, date)
+func (r *Ride) AddSegment(from, to Coordinate, date time.Time) error {
+	seg, err := NewSegment(from, to, date)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func (r *Ride) AddSegment(distance float64, date time.Time) error {
 	return nil
 }
 
-func (r Ride) Calculate() float64 {
+func (r *Ride) Calculate() float64 {
 	price := 0.0
 	for _, segment := range r.Segments {
 		if segment.IsOvernight() && !segment.IsSunday() {

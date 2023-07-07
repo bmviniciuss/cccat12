@@ -43,7 +43,9 @@ func (h *RideCalculatorHandler) Calculate(w http.ResponseWriter, r *http.Request
 			render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, errors.New("invalid date")))
 			return
 		}
-		err = ride.AddSegment(segment.Distance, time)
+		from := *entities.NewCoordinate(segment.From.Lat, segment.From.Long)
+		to := *entities.NewCoordinate(segment.To.Lat, segment.To.Long)
+		err = ride.AddSegment(from, to, time)
 		if err != nil {
 			render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
 			return

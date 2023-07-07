@@ -48,26 +48,6 @@ func cleanString(s string) string {
 	return strings.TrimSpace(s)
 }
 
-func buildTestServer(db *sqlx.DB) *chi.Mux {
-	driverRepo := pg.NewDriverRepository(db)
-	createDriverUseCase := usecase.NewCreateDriver(driverRepo)
-	getDriverUseCase := usecase.NewGetDriver(driverRepo)
-	driverHandler := handlers.NewDriverHandler(createDriverUseCase, getDriverUseCase)
-
-	passengerRepo := pg.NewPassengerRepository(db)
-	getPassengerUseCase := usecase.NewGetPassenger(passengerRepo)
-	createPassengerUseCase := usecase.NewCreatePassenger(passengerRepo)
-	passengerHandler := handlers.NewPassengerHandler(createPassengerUseCase, getPassengerUseCase)
-
-	rideCalculatorHandler := handlers.NewRideCalculatorHandler()
-
-	return NewServer(
-		driverHandler,
-		passengerHandler,
-		rideCalculatorHandler,
-	).Build()
-}
-
 func Test_NotFound(t *testing.T) {
 	t.Run("should return 404 response", func(t *testing.T) {
 		mux := NewServer(
@@ -91,14 +71,31 @@ func Test_NotFound(t *testing.T) {
 	})
 }
 
-func Test_CalculateRide(t *testing.T) {
-	t.Run("should return a ride price", func(t *testing.T) {
-		mux := NewServer(
-			&mockDriverHandlers{},
-			&mockPassengerHandlers{},
-			handlers.NewRideCalculatorHandler(),
-		).Build()
+func buildTestServer(db *sqlx.DB) *chi.Mux {
+	driverRepo := pg.NewDriverRepository(db)
+	createDriver := usecase.NewCreateDriver(driverRepo)
+	getDriver := usecase.NewGetDriver(driverRepo)
 
+	passengerRepo := pg.NewPassengerRepository(db)
+	createPassenger := usecase.NewCreatePassenger(passengerRepo)
+	getPassenger := usecase.NewGetPassenger(passengerRepo)
+
+	return NewServer(
+		handlers.NewDriverHandler(createDriver, getDriver),
+		handlers.NewPassengerHandler(createPassenger, getPassenger),
+		handlers.NewRideCalculatorHandler(),
+	).Build()
+}
+
+func Test_CalculateRide(t *testing.T) {
+	pgm := withDatabase(t, context.Background())
+
+	t.Cleanup(func() {
+		pgm.CloseConnection()
+	})
+
+	t.Run("should return a ride price", func(t *testing.T) {
+		mux := buildTestServer(pgm.GetConnection())
 		req := httptest.NewRequest(
 			http.MethodPost,
 			"/calculate_ride",
@@ -107,8 +104,15 @@ func Test_CalculateRide(t *testing.T) {
 					map[string]interface{}{
 						"segments": []map[string]interface{}{
 							{
-								"distance": 10,
-								"date":     "2021-03-01T10:00:00",
+								"from": map[string]float64{
+									"lat":  38.898556,
+									"long": -77.037852,
+								},
+								"to": map[string]float64{
+									"lat":  38.897147,
+									"long": -77.043934,
+								},
+								"date": "2021-03-01T10:00:00",
 							},
 						},
 					},
@@ -122,7 +126,7 @@ func Test_CalculateRide(t *testing.T) {
 		assert.Equal(t, rec.Code, 200)
 		assert.Equal(t, buildMapResponse(
 			map[string]interface{}{
-				"price": 21,
+				"price": 1153.2271615301174,
 			},
 		), resBody)
 	})
@@ -143,8 +147,15 @@ func Test_CalculateRide(t *testing.T) {
 					map[string]interface{}{
 						"segments": []map[string]interface{}{
 							{
-								"distance": 10,
-								"date":     "2021-03-0110:00:00",
+								"from": map[string]float64{
+									"lat":  38.898556,
+									"long": -77.037852,
+								},
+								"to": map[string]float64{
+									"lat":  38.897147,
+									"long": -77.043934,
+								},
+								"date": "2021-03-0110:00:00",
 							},
 						},
 					},
@@ -248,8 +259,7 @@ func Test_CreatePassenger(t *testing.T) {
 	})
 }
 
-func Test_CreateDriver(t *testing.T) {
-	ctx := context.Background()
+func withDatabase(t *testing.T, ctx context.Context) *connections.PostgresManager {
 	pgm := connections.NewPostgresManager()
 
 	err := pgm.Connect(ctx, connections.PostgresConfig{
@@ -260,14 +270,19 @@ func Test_CreateDriver(t *testing.T) {
 		Database: "cccar",
 	})
 
-	db := pgm.GetConnection()
-
 	if err != nil {
 		t.Error(err)
-		return
+		return nil
 	}
 
-	_, err = db.Exec("DELETE FROM cccar.drivers where true")
+	return pgm
+}
+
+func Test_CreateDriver(t *testing.T) {
+	pgm := withDatabase(t, context.Background())
+	db := pgm.GetConnection()
+
+	_, err := db.Exec("DELETE FROM cccar.drivers where true")
 	if err != nil {
 		t.Error(err)
 		return
@@ -276,6 +291,7 @@ func Test_CreateDriver(t *testing.T) {
 	t.Cleanup(func() {
 		pgm.CloseConnection()
 	})
+
 	t.Run("should return a response with driver id", func(t *testing.T) {
 		driverRepo := pg.NewDriverRepository(db)
 		createDriver := usecase.NewCreateDriver(driverRepo)

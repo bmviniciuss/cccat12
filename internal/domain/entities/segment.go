@@ -13,12 +13,16 @@ var TimeLayout = "2006-01-02T15:04:05"
 
 type Segment struct {
 	Distance float64
+	From     Coordinate
+	To       Coordinate
 	Date     time.Time
 }
 
-func NewSegment(distance float64, date time.Time) (*Segment, error) {
+func NewSegment(from, to Coordinate, date time.Time) (*Segment, error) {
 	seg := &Segment{
-		Distance: distance,
+		Distance: from.DistanceInMeters(to),
+		From:     from,
+		To:       to,
 		Date:     date,
 	}
 	err := seg.valid()
@@ -28,7 +32,7 @@ func NewSegment(distance float64, date time.Time) (*Segment, error) {
 	return seg, nil
 }
 
-func (s *Segment) valid() error {
+func (s Segment) valid() error {
 	if s.Distance <= 0 {
 		return ErrInvalidSegmentDistance
 	}

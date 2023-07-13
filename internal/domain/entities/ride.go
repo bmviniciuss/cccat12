@@ -1,6 +1,8 @@
 package entities
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	OvernightFare       float64 = 3.90
@@ -11,7 +13,24 @@ const (
 )
 
 type Ride struct {
-	Segments []Segment
+	ID          string
+	PassengerID string
+	DriverID    *string
+	RequestDate time.Time
+	From        Coordinate
+	To          Coordinate
+	Segments    []Segment
+}
+
+func CreateRide(passengerID string, from, to Coordinate) *Ride {
+	return &Ride{
+		ID:          NewULID().String(),
+		PassengerID: passengerID,
+		From:        from,
+		To:          to,
+		RequestDate: time.Now(),
+		DriverID:    nil,
+	}
 }
 
 func NewRide() *Ride {

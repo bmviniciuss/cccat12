@@ -78,7 +78,7 @@ func (h *PassengerHandler) Get(w http.ResponseWriter, r *http.Request) {
 	out := &presentation.GetPassengerOutput{
 		ID:    res.ID.String(),
 		Name:  res.Name,
-		Email: res.Email,
+		Email: res.Email.Value,
 	}
 	render.Status(r, http.StatusOK)
 	render.Render(w, r, out)

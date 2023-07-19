@@ -37,7 +37,7 @@ func (r *PassengerRepository) Create(ctx context.Context, p *entities.Passenger)
 		return err
 	}
 
-	_, err = stmt.ExecContext(ctx, p.ID, p.Name, p.Email, p.Document)
+	_, err = stmt.ExecContext(ctx, p.ID, p.Name, p.Email.Value, p.Document)
 	if err != nil {
 		return err // TODO: What to do with constraints errors?
 	}
@@ -84,10 +84,15 @@ func (r *PassengerRepository) Get(ctx context.Context, id string) (*entities.Pas
 		return nil, err
 	}
 
+	email, err := entities.NewEmail(row.Email)
+	if err != nil {
+		return nil, err
+	}
+
 	return &entities.Passenger{
 		ID:       uid,
 		Name:     row.Name,
-		Email:    row.Email,
+		Email:    *email,
 		Document: *document,
 	}, nil
 }

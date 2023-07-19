@@ -5,7 +5,7 @@ import "github.com/google/uuid"
 type Passenger struct {
 	ID       uuid.UUID
 	Name     string
-	Email    string
+	Email    Email
 	Document CPF
 }
 
@@ -15,10 +15,15 @@ func CreatePassenger(name, email, document string) (*Passenger, error) {
 		return nil, err
 	}
 
+	emailVO, err := NewEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
 	p := &Passenger{
 		ID:       NewULID(),
 		Name:     name,
-		Email:    email,
+		Email:    *emailVO,
 		Document: *cpf,
 	}
 

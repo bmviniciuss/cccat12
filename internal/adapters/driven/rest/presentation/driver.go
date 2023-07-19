@@ -3,9 +3,9 @@ package presentation
 import "net/http"
 
 type CreateDriverInput struct {
-	Name        string `json:"name"`
-	Document    string `json:"document"`
-	PlateNumber string `json:"plate_number"`
+	Name     string `json:"name"`
+	Document string `json:"document"`
+	CarPlate string `json:"car_plate"`
 }
 
 type CreateDriverOutput struct {

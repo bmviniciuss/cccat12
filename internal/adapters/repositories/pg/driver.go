@@ -38,7 +38,9 @@ func (r *DriverRepository) Create(ctx context.Context, driver *entities.Driver) 
 		return err
 	}
 
-	_, err = stmt.ExecContext(ctx, driver.ID, driver.Name, driver.Document, driver.PlateNumber)
+	_, err = stmt.ExecContext(ctx,
+		driver.ID, driver.Name, driver.Document, driver.CarPlate.Value,
+	)
 	if err != nil {
 		return err // TODO: What to do with constraints errors?
 	}
@@ -85,10 +87,15 @@ func (r *DriverRepository) Get(ctx context.Context, id string) (*entities.Driver
 		return nil, err
 	}
 
+	cp, err := entities.NewCarPlate(row.PlateNumber)
+	if err != nil {
+		return nil, err
+	}
+
 	return &entities.Driver{
-		ID:          uuid,
-		Name:        row.Name,
-		Document:    *document,
-		PlateNumber: row.PlateNumber,
+		ID:       uuid,
+		Name:     row.Name,
+		Document: *document,
+		CarPlate: *cp,
 	}, nil
 }

@@ -43,9 +43,9 @@ func (h *DriverHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	// TODO: validation
 	res, err := h.createDriver.Execute(ctx, usecase.CreateDriverInput{
-		Name:        input.Name,
-		Document:    input.Document,
-		PlateNumber: input.PlateNumber,
+		Name:     input.Name,
+		Document: input.Document,
+		CarPlate: input.CarPlate,
 	})
 	if err != nil {
 		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
@@ -68,6 +68,7 @@ func (h *DriverHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
+
 		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
 		return
 	}
@@ -76,7 +77,7 @@ func (h *DriverHandler) Get(w http.ResponseWriter, r *http.Request) {
 		ID:          res.ID.String(),
 		Name:        res.Name,
 		Document:    res.Document.String(),
-		PlateNumber: res.PlateNumber,
+		PlateNumber: res.CarPlate.Value,
 	}
 	render.Render(w, r, out)
 }

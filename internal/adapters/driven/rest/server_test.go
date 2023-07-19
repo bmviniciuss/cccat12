@@ -310,7 +310,7 @@ func Test_CreateDriver(t *testing.T) {
 					"name":      "Vinicius Barbosa de Medeiros",
 					"email":     "test@test.com",
 					"document":  testutils.GenerateRandomCPF(),
-					"car_plate": "ABC-1234",
+					"car_plate": "ABC1234",
 				}),
 			),
 		)
@@ -366,21 +366,31 @@ func Test_GetDriver(t *testing.T) {
 			&mockRideCalculatorHandlers{},
 		).Build()
 
-		driver := driverRow{}
-		err := db.Get(&driver, "SELECT id, name, document, plate_number FROM cccar.drivers LIMIT 1")
-		if err != nil {
-			// TODO: maybe insert a driver here
-			t.Error(err)
-			return
-		}
-
 		req := httptest.NewRequest(
+			http.MethodPost,
+			"/drivers",
+			strings.NewReader(
+				testutils.StringFromMap(map[string]interface{}{
+					"name":      "Vinicius Barbosa de Medeiros",
+					"email":     "test@test.com",
+					"document":  testutils.GenerateRandomCPF(),
+					"car_plate": "ABC1234",
+				}),
+			),
+		)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		resBody := rec.Body.Bytes()
+		var res presentation.CreateDriverOutput
+		_ = json.Unmarshal(resBody, &res)
+
+		req = httptest.NewRequest(
 			http.MethodGet,
-			fmt.Sprintf("/drivers/%s", driver.ID),
+			fmt.Sprintf("/drivers/%s", res.ID),
 			nil,
 		)
 		req.Header.Set("Content-Type", "application/json")
-		rec := httptest.NewRecorder()
+		rec = httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
 
 		assert.Equal(t, 200, rec.Code)

@@ -18,9 +18,9 @@ func NewCreateDriver(driverRepository repository.Driver) *CreateDriver {
 }
 
 type CreateDriverInput struct {
-	Name        string
-	Document    string
-	PlateNumber string
+	Name     string
+	Document string
+	CarPlate string
 }
 
 type CreateDriverOutput struct {
@@ -28,7 +28,7 @@ type CreateDriverOutput struct {
 }
 
 func (c *CreateDriver) Execute(ctx context.Context, input CreateDriverInput) (*CreateDriverOutput, error) {
-	driver, err := entities.CreateDriver(input.Name, input.Document, input.PlateNumber)
+	driver, err := entities.CreateDriver(input.Name, input.Document, input.CarPlate)
 	if err != nil {
 		return nil, err
 	}

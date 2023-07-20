@@ -9,20 +9,19 @@ var (
 	ErrInvalidSegmentDistance = errors.New("invalid segment distance")
 )
 
-var TimeLayout = "2006-01-02T15:04:05"
+var (
+	TimeLayout     = "2006-01-02T15:04:05"
+	ErrInvalidDate = errors.New("invalid date")
+)
 
 type Segment struct {
 	Distance float64
-	From     Coordinate
-	To       Coordinate
 	Date     time.Time
 }
 
-func NewSegment(from, to Coordinate, date time.Time) (*Segment, error) {
+func NewSegment(distance float64, date time.Time) (*Segment, error) {
 	seg := &Segment{
-		Distance: from.DistanceInMeters(to),
-		From:     from,
-		To:       to,
+		Distance: distance,
 		Date:     date,
 	}
 	err := seg.valid()

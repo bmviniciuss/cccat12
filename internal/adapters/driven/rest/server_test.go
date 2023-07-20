@@ -87,14 +87,18 @@ func buildTestServer(db *sqlx.DB) *chi.Mux {
 	).Build()
 }
 
-func Test_CalculateRide(t *testing.T) {
+func TestApi_CalculateRide(t *testing.T) {
 	pgm := withDatabase(t, context.Background())
 
 	t.Cleanup(func() {
 		pgm.CloseConnection()
 	})
 
+	// ride.AddPosition(-27.584905257808835, -48.545022195325124, time)
+	// ride.AddPosition(-27.496887588317275, -48.522234807851476, time)
+
 	t.Run("should return a ride price", func(t *testing.T) {
+
 		mux := buildTestServer(pgm.GetConnection())
 		req := httptest.NewRequest(
 			http.MethodPost,
@@ -102,16 +106,15 @@ func Test_CalculateRide(t *testing.T) {
 			strings.NewReader(
 				testutils.StringFromMap(
 					map[string]interface{}{
-						"segments": []map[string]interface{}{
+						"positions": []map[string]interface{}{
 							{
-								"from": map[string]float64{
-									"lat":  38.898556,
-									"long": -77.037852,
-								},
-								"to": map[string]float64{
-									"lat":  38.897147,
-									"long": -77.043934,
-								},
+								"lat":  -27.584905257808835,
+								"long": -48.545022195325124,
+								"date": "2021-03-01T10:00:00",
+							},
+							{
+								"lat":  -27.496887588317275,
+								"long": -48.522234807851476,
 								"date": "2021-03-01T10:00:00",
 							},
 						},
@@ -126,7 +129,7 @@ func Test_CalculateRide(t *testing.T) {
 		assert.Equal(t, rec.Code, 200)
 		assert.Equal(t, buildMapResponse(
 			map[string]interface{}{
-				"price": 1153.2271615301174,
+				"price": 21.08753314776229,
 			},
 		), resBody)
 	})
@@ -145,7 +148,7 @@ func Test_CalculateRide(t *testing.T) {
 			strings.NewReader(
 				testutils.StringFromMap(
 					map[string]interface{}{
-						"segments": []map[string]interface{}{
+						"positions": []map[string]interface{}{
 							{
 								"from": map[string]float64{
 									"lat":  38.898556,

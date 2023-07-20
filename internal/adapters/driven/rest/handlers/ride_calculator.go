@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
-	"time"
 
 	"github.com/bmviniciuss/cccat12/internal/adapters/driven/rest/presentation"
+	"github.com/bmviniciuss/cccat12/internal/application/usecase"
 	"github.com/bmviniciuss/cccat12/internal/customcontext"
-	"github.com/bmviniciuss/cccat12/internal/domain/entities"
 	"github.com/bmviniciuss/cccat12/internal/ports"
 	"github.com/go-chi/render"
 )
@@ -35,26 +33,26 @@ func (h *RideCalculatorHandler) Calculate(w http.ResponseWriter, r *http.Request
 	}
 
 	// TODO: validation
-
-	ride := entities.NewRide()
-	for _, segment := range input.Segments {
-		time, err := time.Parse(entities.TimeLayout, segment.Date)
-		if err != nil {
-			render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, errors.New("invalid date")))
-			return
-		}
-		from := *entities.NewCoordinate(segment.From.Lat, segment.From.Long)
-		to := *entities.NewCoordinate(segment.To.Lat, segment.To.Long)
-		err = ride.AddSegment(from, to, time)
-		if err != nil {
-			render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
-			return
+	useCase := usecase.NewCalculateRide()
+	useCaseInput := usecase.CalculateRideInput{}
+	positions := make([]usecase.CalculateRidePosition, len(input.Positions))
+	for i, pos := range input.Positions {
+		positions[i] = usecase.CalculateRidePosition{
+			Lat:  pos.Lat,
+			Long: pos.Long,
+			Date: pos.Date,
 		}
 	}
+	useCaseInput.Positions = positions
 
-	price := ride.Calculate()
+	out, err := useCase.Execute(useCaseInput)
+	if err != nil {
+		render.Render(w, r, presentation.ErrUnprocessableEntity(reqID, err))
+		return
+	}
+
 	res := &presentation.CalculateRideOutput{
-		Price: price,
+		Price: out,
 	}
 	render.Status(r, http.StatusOK)
 	render.Render(w, r, res)

@@ -20,6 +20,7 @@ type Ride struct {
 	From        Coordinate
 	To          Coordinate
 	Segments    []Segment
+	Positions   []Position
 }
 
 func CreateRide(passengerID string, from, to Coordinate) *Ride {
@@ -35,22 +36,25 @@ func CreateRide(passengerID string, from, to Coordinate) *Ride {
 
 func NewRide() *Ride {
 	return &Ride{
-		Segments: []Segment{},
+		Positions: []Position{},
 	}
 }
 
-func (r *Ride) AddSegment(from, to Coordinate, date time.Time) error {
-	seg, err := NewSegment(from, to, date)
-	if err != nil {
-		return err
-	}
-	r.Segments = append(r.Segments, *seg)
-	return nil
+func (r *Ride) AddPosition(lat, long float64, date time.Time) {
+	pos := NewPosition(lat, long, date)
+	r.Positions = append(r.Positions, *pos)
 }
 
-func (r *Ride) Calculate() float64 {
+func (r *Ride) Calculate() (float64, error) {
 	price := 0.0
-	for _, segment := range r.Segments {
+	for i := 0; i < len(r.Positions)-1; i++ {
+		current := r.Positions[i]
+		next := r.Positions[i+1]
+		distance := current.Coord.DistanceInMeters(next.Coord)
+		segment, err := NewSegment(distance, next.Date)
+		if err != nil {
+			return -1, err
+		}
 		if segment.IsOvernight() && !segment.IsSunday() {
 			price += segment.Distance * OvernightFare
 		}
@@ -64,10 +68,8 @@ func (r *Ride) Calculate() float64 {
 			price += segment.Distance * NormalFare
 		}
 	}
-
 	if price < MinPrice {
-		return MinPrice
+		return MinPrice, nil
 	}
-
-	return price
+	return price, nil
 }

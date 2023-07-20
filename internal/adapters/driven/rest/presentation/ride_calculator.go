@@ -3,17 +3,13 @@ package presentation
 import "net/http"
 
 type CalculateRideInput struct {
-	Segments []Segment `json:"segments"`
-}
-type Coordinate struct {
-	Lat  float64 `json:"lat"`
-	Long float64 `json:"long"`
+	Positions []Position `json:"positions"`
 }
 
-type Segment struct {
-	From Coordinate `json:"from"`
-	To   Coordinate `json:"to"`
-	Date string     `json:"date"`
+type Position struct {
+	Lat  float64 `json:"lat"`
+	Long float64 `json:"long"`
+	Date string  `json:"date"`
 }
 
 type CalculateRideOutput struct {

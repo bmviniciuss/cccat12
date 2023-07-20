@@ -3,7 +3,7 @@ package entities
 import "math"
 
 const (
-	earthRadiusMeters = 6371000
+	earthRadiusMeters = 6371
 )
 
 type Coordinate struct {

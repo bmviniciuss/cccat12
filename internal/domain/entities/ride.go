@@ -55,18 +55,12 @@ func (r *Ride) Calculate() (float64, error) {
 		if err != nil {
 			return -1, err
 		}
-		if segment.IsOvernight() && !segment.IsSunday() {
-			price += segment.Distance * OvernightFare
+		fareCalculator, err := createFareCalculator(*segment)
+		if err != nil {
+			return -1, err
 		}
-		if segment.IsOvernight() && segment.IsSunday() {
-			price += segment.Distance * OvernightSundayFare
-		}
-		if !segment.IsOvernight() && segment.IsSunday() {
-			price += segment.Distance * SundayFare
-		}
-		if !segment.IsOvernight() && !segment.IsSunday() {
-			price += segment.Distance * NormalFare
-		}
+
+		price += fareCalculator.Calculate(*segment)
 	}
 	if price < MinPrice {
 		return MinPrice, nil

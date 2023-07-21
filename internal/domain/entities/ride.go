@@ -32,7 +32,7 @@ func CreateRide(passengerID string, from, to Coordinate) *Ride {
 
 func NewRide() *Ride {
 	return &Ride{
-		Positions: []Position{},
+		Positions: make([]Position, 0),
 	}
 }
 

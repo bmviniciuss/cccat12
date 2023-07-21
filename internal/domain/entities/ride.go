@@ -5,11 +5,7 @@ import (
 )
 
 const (
-	OvernightFare       float64 = 3.90
-	OvernightSundayFare float64 = 5.0
-	SundayFare          float64 = 2.9
-	NormalFare          float64 = 2.1
-	MinPrice            float64 = 10
+	minPrice = 10.00
 )
 
 type Ride struct {
@@ -62,8 +58,8 @@ func (r *Ride) Calculate() (float64, error) {
 
 		price += fareCalculator.Calculate(*segment)
 	}
-	if price < MinPrice {
-		return MinPrice, nil
+	if price < minPrice {
+		return minPrice, nil
 	}
 	return price, nil
 }

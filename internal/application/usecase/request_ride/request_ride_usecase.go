@@ -1,17 +1,18 @@
-package usecase
+package requestride
 
 import (
 	"context"
+
 	"github.com/bmviniciuss/cccat12/internal/application/repository"
 	"github.com/bmviniciuss/cccat12/internal/domain/entities"
 )
 
-type RequestRide struct {
+type UseCase struct {
 	rideRepository repository.Ride
 }
 
-func NewRequestRide(rideRepository repository.Ride) *RequestRide {
-	return &RequestRide{
+func NewUseCase(rideRepository repository.Ride) *UseCase {
+	return &UseCase{
 		rideRepository: rideRepository,
 	}
 }
@@ -31,7 +32,7 @@ type RequestRideOutput struct {
 	ID string
 }
 
-func (uc *RequestRide) Execute(ctx context.Context, input RequestRideInput) (*RequestRideOutput, error) {
+func (uc *UseCase) Execute(ctx context.Context, input RequestRideInput) (*RequestRideOutput, error) {
 	from := entities.Coordinate{
 		Latitude:  input.From.Latitude,
 		Longitude: input.From.Longitude,

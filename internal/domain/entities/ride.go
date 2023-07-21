@@ -8,6 +8,12 @@ const (
 	minPrice = 10.00
 )
 
+type RideStatus string
+
+var (
+	RideStatusWaitingDriver RideStatus = "waiting_driver"
+)
+
 type Ride struct {
 	ID          string
 	PassengerID string
@@ -15,7 +21,6 @@ type Ride struct {
 	RequestDate time.Time
 	From        Coordinate
 	To          Coordinate
-	Segments    []Segment
 	Positions   []Position
 }
 
@@ -23,10 +28,11 @@ func CreateRide(passengerID string, from, to Coordinate) *Ride {
 	return &Ride{
 		ID:          NewULID().String(),
 		PassengerID: passengerID,
+		DriverID:    nil,
+		RequestDate: time.Now(),
 		From:        from,
 		To:          to,
-		RequestDate: time.Now(),
-		DriverID:    nil,
+		Positions:   make([]Position, 0),
 	}
 }
 
